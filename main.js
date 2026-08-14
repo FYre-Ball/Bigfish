@@ -13,7 +13,8 @@
  * Desktop-product extras (on top of the plain web shell):
  *   - system tray + global shortcut to summon the window
  *   - minimize-to-tray (closing the window keeps the app alive)
- *   - completion notifications (heuristic: backend writes then goes idle)
+ *   - completion notifications (heuristic: sustained backend writes, then idle)
+ *   - crash recovery (restart the backend with backoff if it dies mid-session)
  *   - desktop pet (transparent floating window)
  *   - launch at login, and a Windows "Open with Bigfish" context menu
  */
@@ -33,6 +34,16 @@ const APP_NAME = 'Bigfish';
 const HOST = '127.0.0.1';
 const READY_TIMEOUT_MS = 90 * 1000;
 const IDLE_NOTIFY_MS = 30 * 1000; // backend quiet for this long after activity => "done"
+// Marker the dsh UI embeds in its HTML title; proves the probed port really
+// serves the harness backend, not some other local process.
+const READY_MARKER = 'DeepSeek Harness';
+// Completion-notification heuristic: a write burst only counts as a running
+// task once it persists across this many polls (~10s), which filters out
+// one-shot writes like the UI creating a session file.
+const ACTIVITY_STREAK_POLLS = 2;
+// Crash recovery: delays between restart attempts, then give up.
+const RESTART_DELAYS_MS = [2000, 5000, 10000, 30000];
+const RESTART_GRACE_MS = 60 * 1000; // healthy for this long => reset the backoff
 
 /** @type {import('node:child_process').ChildProcess | null} */
 let dshProcess = null;
@@ -50,6 +61,11 @@ let quitting = false;
 let completionWatcherTimer = null;
 let lastBusyAt = 0;
 let notifiedForCycle = false;
+let activityStreak = 0;
+let taskRunning = false;
+let restartAttempts = 0;
+let restartGraceTimer = null;
+let backendRestarting = false;
 
 // ---------------------------------------------------------------------------
 // Settings (persisted to userData/settings.json)
@@ -97,6 +113,18 @@ function findFreePort() {
   });
 }
 
+/** Whether the given localhost port is currently free. */
+function portFree(p) {
+  return new Promise((resolve) => {
+    const srv = net.createServer();
+    srv.unref();
+    srv.once('error', () => resolve(false));
+    srv.listen(p, HOST, () => {
+      srv.close(() => resolve(true));
+    });
+  });
+}
+
 function dshBinPath() {
   if (app.isPackaged) {
     // The production-only dsh node_modules are bundled via extraResources.
@@ -125,17 +153,26 @@ function waitForReady(p, timeoutMs = READY_TIMEOUT_MS) {
   const base = `http://${HOST}:${p}`;
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
+    let settled = false;
     const attempt = () => {
       const req = http.get(`${base}/`, (res) => {
-        res.resume();
-        if (res.statusCode && res.statusCode < 500) resolve();
-        else retry();
+        let body = '';
+        res.on('data', (chunk) => {
+          body += chunk.toString('utf8');
+          if (body.includes(READY_MARKER)) {
+            req.destroy();
+            if (!settled) { settled = true; resolve(); }
+          }
+        });
+        res.on('end', retry);
       });
       req.once('error', retry);
-      req.setTimeout(3000, () => { req.destroy(); retry(); });
+      req.setTimeout(3000, () => req.destroy());
     };
     const retry = () => {
+      if (settled) return;
       if (Date.now() - startedAt > timeoutMs) {
+        settled = true;
         reject(new Error(`Timed out waiting for the backend at ${base}`));
         return;
       }
@@ -146,17 +183,37 @@ function waitForReady(p, timeoutMs = READY_TIMEOUT_MS) {
 }
 
 async function startDsh() {
-  port = await findFreePort();
+  // On restart, reuse the previous port (the main window still points at
+  // it); fall back to a fresh one if another process grabbed it meanwhile.
+  if (port === null || !(await portFree(port))) {
+    port = await findFreePort();
+  }
   const rt = resolveRuntime();
   const args = [...rt.args, '--profile', 'web', '--host', HOST, '--port', String(port)];
   console.log(`[bigfish] starting backend on http://${HOST}:${port}`);
-  dshProcess = spawn(rt.command, args, {
+  const child = spawn(rt.command, args, {
     env: rt.env,
     stdio: ['ignore', 'inherit', 'inherit'],
     windowsHide: true,
   });
-  dshProcess.once('error', (err) => console.error('[bigfish] failed to spawn backend:', err));
-  await waitForReady(port);
+  dshProcess = child;
+  child.once('error', (err) => console.error('[bigfish] failed to spawn backend:', err));
+  // Fail fast when the backend dies (or never starts) during startup,
+  // instead of making the user stare at a blank window for 90 seconds.
+  const died = new Promise((_, reject) => {
+    child.once('error', () => reject(new Error('无法启动后端进程（node 运行时或 dsh 安装缺失？）')));
+    child.once('exit', (code, signal) => reject(new Error(`后端在就绪前退出（code=${code}, signal=${signal}）`)));
+  });
+  try {
+    await Promise.race([waitForReady(port), died]);
+  } catch (err) {
+    dshProcess = null;
+    throw err;
+  }
+  // Healthy again: after a grace period of uptime, reset the crash backoff.
+  clearTimeout(restartGraceTimer);
+  restartGraceTimer = setTimeout(() => { restartAttempts = 0; }, RESTART_GRACE_MS);
+  watchBackend(child);
 }
 
 function stopDsh() {
@@ -171,6 +228,57 @@ function stopDsh() {
       setTimeout(() => { try { child.kill('SIGKILL'); } catch { /* gone */ } }, 3000);
     }
   } catch { /* best effort */ }
+}
+
+// ---------------------------------------------------------------------------
+// Backend crash recovery
+// ---------------------------------------------------------------------------
+function watchBackend(child) {
+  child.once('exit', (code, signal) => {
+    // stopDsh() nulls dshProcess first, so a clean shutdown never lands here.
+    if (quitting || dshProcess !== child) return;
+    dshProcess = null;
+    console.warn(`[bigfish] backend exited unexpectedly (code=${code}, signal=${signal})`);
+    scheduleBackendRestart();
+  });
+}
+
+function scheduleBackendRestart() {
+  if (backendRestarting || quitting) return;
+  if (restartAttempts >= RESTART_DELAYS_MS.length) {
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'error',
+      title: APP_NAME,
+      message: 'Bigfish 后端多次重启失败',
+      detail: '请检查安装是否完整，或尝试重启应用。',
+      buttons: ['重试', '退出'],
+      defaultId: 0,
+    }).then(({ response }) => {
+      if (response === 0) { restartAttempts = 0; scheduleBackendRestart(); }
+      else { quitting = true; app.quit(); }
+    });
+    return;
+  }
+  const delay = RESTART_DELAYS_MS[restartAttempts];
+  restartAttempts++;
+  backendRestarting = true;
+  notify(APP_NAME, '后端异常退出，正在自动重启…');
+  petSay('哎呀，我摔了一跤，马上爬起来！');
+  setTimeout(async () => {
+    backendRestarting = false;
+    if (quitting) return;
+    try {
+      await startDsh();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.loadURL(`http://${HOST}:${port}`);
+      }
+      console.log('[bigfish] backend restarted');
+      petSay('我回来啦！');
+    } catch (err) {
+      console.error('[bigfish] backend restart failed:', err && err.message ? err.message : err);
+      scheduleBackendRestart();
+    }
+  }, delay);
 }
 
 // ---------------------------------------------------------------------------
@@ -301,15 +409,26 @@ function startCompletionWatcher() {
     if (!settings.notifyOnComplete) return;
     const { t } = latestMtime(dshHome(), skip);
     const now = Date.now();
-    if (t > lastBusyAt + 2000 && now - t < 2000) {
-      // fresh write => busy
-      lastBusyAt = now;
-      notifiedForCycle = false;
-    } else if (lastBusyAt > 0 && now - lastBusyAt > IDLE_NOTIFY_MS && !notifiedForCycle) {
-      notifiedForCycle = true;
-      const msg = 'Bigfish 任务已完成';
-      notify(msg, '后端已空闲，可以回来看看结果了');
-      petSay('任务完成啦！');
+    const fresh = t > lastBusyAt + 2000 && now - t < 5000;
+    if (fresh) {
+      // Only treat it as a running task once writes persist across several
+      // polls; one-shot bursts (e.g. the UI creating a session file while
+      // browsing) are filtered out and won't trigger a completion notice.
+      activityStreak++;
+      if (activityStreak >= ACTIVITY_STREAK_POLLS) {
+        taskRunning = true;
+        notifiedForCycle = false;
+      }
+      if (taskRunning) lastBusyAt = now;
+    } else {
+      activityStreak = 0;
+      if (taskRunning && now - lastBusyAt > IDLE_NOTIFY_MS) {
+        taskRunning = false;
+        notifiedForCycle = true;
+        const msg = 'Bigfish 任务已完成';
+        notify(msg, '后端已空闲，可以回来看看结果了');
+        petSay('任务完成啦！');
+      }
     }
   }, 5000);
 }
@@ -319,6 +438,8 @@ function stopCompletionWatcher() {
     clearInterval(completionWatcherTimer);
     completionWatcherTimer = null;
   }
+  activityStreak = 0;
+  taskRunning = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -552,7 +673,7 @@ function rebuildTrayMenu() {
 function setNotify(enabled) {
   settings.notifyOnComplete = enabled;
   saveSettings();
-  if (!enabled) { lastBusyAt = 0; notifiedForCycle = false; }
+  if (!enabled) { lastBusyAt = 0; notifiedForCycle = false; activityStreak = 0; taskRunning = false; }
 }
 
 function setAutoStart(enabled) {
