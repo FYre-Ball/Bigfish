@@ -75,32 +75,7 @@ npm start
 
 ## 打包
 
-### 0. 准备 Node 运行时（必需）
-
-打包版需要 `node-runtime/node.exe`（Node ≥22）。二选一：
-
-```bash
-# 方式 A：直接复制系统 Node（最简单）
-mkdir node-runtime
-copy "C:\Program Files\nodejs\node.exe" node-runtime\node.exe
-
-# 方式 B：自动下载便携版 v24 并解压（Windows）
-node download-node.js
-```
-
-macOS / Linux 同理，把本机 `node` 二进制放到 `node-runtime/node`。
-
-### 0.5 准备 dsh 依赖（必需）
-
-Bigfish 用一份独立的**纯生产依赖**跑后端（避免 electron-builder 丢弃 rc 预发布版本的包）：
-
-```bash
-cd dsh-bundle
-npm install --omit=dev     # 安装 @deepseek-ai/dsh 及其生产依赖
-cd ..
-```
-
-### 1. 打包
+`npm run dist:win` 会先自动执行 `predist:win` 前置检查（`prepare-pack.js`：补齐 `node-runtime/` 与 `dsh-bundle` 依赖），之后开始打包。**改完代码直接跑这一条命令即可**：
 
 ```bash
 npm run dist:win      # Windows NSIS 安装包（dist\Bigfish Setup x.y.z.exe）
@@ -110,7 +85,29 @@ npm run dist:linux    # Linux AppImage + deb（需在 Linux 上构建）
 
 产物输出到 `dist/`。
 
+> 中国大陆网络若下载慢，打包前设置镜像：
+>
+> ```bash
+> set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+> set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+> ```
+
 > 原生依赖（node-pty / sharp / koffi 等）需在各自目标平台上构建，跨平台产物请在对应平台的机器或 CI 上打包。
+
+## 发版检查清单
+
+每次发新版按顺序做：
+
+1. **改版本号**:只改 `package.json` 的 `version`(如 `0.1.0` → `0.1.1`)。安装包文件名、exe 版本信息、NSIS 升级判断都会自动跟着变,无需再改其他文件。
+2. **本地调试**:`npm start` 验证改动。
+3. **打包**:`npm run dist:win`(前置检查自动运行)。
+4. **自测安装**:双击 `dist\Bigfish Setup x.y.z.exe` 覆盖安装,重点试托盘右键菜单和新改动。
+5. **发布**:上传 exe 到 GitHub Releases(单文件 174MB+,GitHub Releases 上限 2GB,不要传仓库)。
+
+### 版本号注意
+
+- `afterPack.js` 自动从 `package.json` 读取版本号并嵌入 exe,不要再手改。
+- 发版前必须 bump 版本号,否则新旧安装包同名,用户分不清版本。
 
 ## 图标 & 萌宠
 

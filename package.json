@@ -11,6 +11,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
+    "predist:win": "node prepare-pack.js",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
     "icons": "node make-icons.js"
@@ -45,7 +46,9 @@
       "!afterPack.js",
       "!remove-pet-bg.js",
       "!update-pet-frames.js",
+      "!prepare-pack.js",
       "!README.md",
+      "!CLAUDE.md",
       "!.gitignore"
     ],
     "extraResources": [

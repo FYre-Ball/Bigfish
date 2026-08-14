@@ -10,6 +10,11 @@ const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 
+// 版本号唯一来源:package.json。Windows 版本串是 4 段(a.b.c.d),
+// 由 package.json 的 x.y.z 补一个 0 得到,改版本只动 package.json。
+const pkg = require('./package.json');
+const winVersion = `${pkg.version}.0`;
+
 exports.default = async function afterPack(context) {
   if (context.electronPlatformName !== 'win32') {
     return;
@@ -26,13 +31,13 @@ exports.default = async function afterPack(context) {
     [
       exe,
       '--set-icon', icon,
-      '--set-version-string', 'ProductName', 'Bigfish',
-      '--set-version-string', 'FileDescription', 'Bigfish',
-      '--set-version-string', 'CompanyName', 'Bigfish',
-      '--set-file-version', '0.1.0.0',
-      '--set-product-version', '0.1.0.0',
+      '--set-version-string', 'ProductName', pkg.productName || 'Bigfish',
+      '--set-version-string', 'FileDescription', pkg.description || 'Bigfish',
+      '--set-version-string', 'CompanyName', pkg.author || 'Bigfish',
+      '--set-file-version', winVersion,
+      '--set-product-version', winVersion,
     ],
     { stdio: 'inherit' },
   );
-  console.log('[afterPack] applied icon + version to', exe);
+  console.log(`[afterPack] applied icon + version ${winVersion} to`, exe);
 };
