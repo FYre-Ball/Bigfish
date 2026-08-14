@@ -1,14 +1,16 @@
 'use strict';
-// Stream-download the Electron 115MB zip to a local temp file, reporting
+// Stream-download the Electron zip to a local temp file, reporting
 // progress and any reset, to determine whether a single large download works.
 const https = require('https');
 const fs = require('fs');
+const path = require('path');
 
-const V = '33.4.11';
+const V = '43.4.0';
 const url = `https://cdn.npmmirror.com/binaries/electron/${V}/electron-v${V}-win32-x64.zip`;
-const dest = `D:\\PROJECT\\deepseekharness\\.electron-cache\\electron-v${V}-win32-x64.zip`;
+const cacheDir = path.join(__dirname, '.electron-cache');
+const dest = path.join(cacheDir, `electron-v${V}-win32-x64.zip`);
 
-fs.mkdirSync('D:\\PROJECT\\deepseekharness\\.electron-cache', { recursive: true });
+fs.mkdirSync(cacheDir, { recursive: true });
 
 const start = Date.now();
 let total = 0;

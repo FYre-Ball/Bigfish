@@ -17,8 +17,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "electron": "^33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.bigfish.app",
@@ -39,16 +39,12 @@
       "!.electron-builder-cache/**",
       "!.dsh-home*/**",
       "!node-runtime/**",
-      "!gitpush/**",
-      "!probe-electron.js",
       "!download-electron.js",
       "!download-node.js",
       "!make-icons.js",
       "!afterPack.js",
       "!remove-pet-bg.js",
-      "!analyze-pet.js",
       "!update-pet-frames.js",
-      "!f00eacea082fad95a74d30b4206e1954.jpg",
       "!README.md",
       "!.gitignore"
     ],

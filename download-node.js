@@ -2,12 +2,14 @@
 // Download the portable Node.js v24 zip with retry + stall detection.
 const https = require('https');
 const fs = require('fs');
+const path = require('path');
 
 const V = '24.16.0';
 const url = `https://cdn.npmmirror.com/binaries/node/v${V}/node-v${V}-win-x64.zip`;
-const dest = `D:\\PROJECT\\deepseekharness\\.electron-cache\\node-v${V}-win-x64.zip`;
+const cacheDir = path.join(__dirname, '.electron-cache');
+const dest = path.join(cacheDir, `node-v${V}-win-x64.zip`);
 
-fs.mkdirSync('D:\\PROJECT\\deepseekharness\\.electron-cache', { recursive: true });
+fs.mkdirSync(cacheDir, { recursive: true });
 
 function attempt(n) {
   return new Promise((resolve, reject) => {

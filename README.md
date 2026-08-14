@@ -57,7 +57,7 @@ whenToUse: 用户什么时候应该用到它
 
 ## 为什么捆绑 Node 运行时
 
-`@deepseek-ai/dsh` 需要 **Node ≥ 22**（用到 `node:zlib.createZstdDecompress`、`node:module.stripTypeScriptTypes`），而 Electron 33 自带的 Node 是 20.18。因此打包版会捆绑一个真实的 Node v24 运行时，用它跑 dsh（同时让原生模块 ABI 与依赖安装时的版本完全匹配）。
+`@deepseek-ai/dsh` 需要 **Node ≥ 22**（用到 `node:zlib.createZstdDecompress`、`node:module.stripTypeScriptTypes`）。虽然 Electron 43 自带 Node 24.18，但 Electron 的原生模块 ABI 与官方 Node 不兼容（dsh 首次启动会用 pnpm 现场安装 node-pty / sharp 等原生依赖），因此打包版仍捆绑一个真实的 Node v24 运行时来跑 dsh，保证原生模块 ABI 与依赖安装时的版本完全匹配。
 
 ## 开发运行
 
@@ -132,6 +132,39 @@ npm run dist:linux    # Linux AppImage + deb（需在 Linux 上构建）
 **安装使用**：双击 exe → 按向导安装 → 桌面/开始菜单出现「Bigfish」→ 双击即用（已内置 Node 运行时，无需装 Node）。
 
 > ⚠️ 安装包约 160MB，超过 GitHub 仓库单文件 100MB 上限，请用 **GitHub Releases** 分发（附件上限 2GB）。
+
+## 常见问题（FAQ）
+
+### 第一次启动为什么比较慢？需要联网吗？
+
+需要联网。dsh 首次启动时会自动初始化 web profile，从 npm 仓库下载一批依赖（约几十~上百 MB，取决于网络）。初始化完成后会缓存在 `~/.dsh`，之后启动不再下载。
+
+### 国内网络下初始化失败或特别慢怎么办？
+
+dsh 初始化依赖走 pnpm，会读取你的 npm 配置。先把 npm 源切到国内镜像再重试：
+
+```bash
+npm config set registry https://registry.npmmirror.com
+```
+
+若公司/校园网需要代理，同时设置：
+
+```bash
+npm config set proxy http://127.0.0.1:<你的代理端口>
+npm config set https-proxy http://127.0.0.1:<你的代理端口>
+```
+
+初始化失败后再次启动会自动重试。
+
+### 启动弹出「Failed to start the DeepSeek Harness backend」怎么办？
+
+常见原因按可能性排序：
+
+1. **首次初始化网络失败**——按上一条配置镜像后重试；
+2. **安装包不完整**——`resources/dsh` 或 `resources/node-runtime` 缺失，重新安装；
+3. **开发模式没装后端依赖**——在 `dsh-bundle/` 目录执行过 `npm install --omit=dev` 吗？（见上方「打包」章节）
+
+排查技巧：命令行运行 `node dsh-bundle/node_modules/@deepseek-ai/dsh/lib/bin.js web --help`，能打印帮助说明 dsh 本身可用。
 
 ## 目录结构
 
