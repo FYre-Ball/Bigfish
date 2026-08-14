@@ -30,11 +30,11 @@ jobs:
       - name: Install app deps
         run: npm install
 
-      # 安装后端生产依赖（dsh-bundle）
+      # 安装后端生产依赖（dsh-bundle，按 lockfile 精确复现）
       - name: Install dsh bundle
         run: |
           cd dsh-bundle
-          npm install --omit=dev
+          npm ci --omit=dev
 
       # 准备各平台的 node-runtime（复制 runner 自带的 Node 二进制）
       - name: Prepare node-runtime (Windows)

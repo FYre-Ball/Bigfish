@@ -538,7 +538,7 @@ function rebuildTrayMenu() {
     {
       label: 'Windows 右键菜单',
       submenu: [
-        { label: '安装「用 Bigfish 打开」', click: () => installContextMenu() },
+        { label: '安装「唤起 Bigfish」', click: () => installContextMenu() },
         { label: '卸载', click: () => uninstallContextMenu() },
       ],
     },
@@ -561,10 +561,17 @@ function setAutoStart(enabled) {
   app.setLoginItemSettings({ openAtLogin: enabled });
 }
 
+function startPet() {
+  createPetWindow();
+  scheduleWander();
+  scheduleSleep();
+  schedulePetChatter();
+}
+
 function setPetEnabled(enabled) {
   settings.petEnabled = enabled;
   saveSettings();
-  if (enabled) createPetWindow();
+  if (enabled) startPet();
   else destroyPetWindow();
 }
 
@@ -601,11 +608,11 @@ async function installContextMenu() {
   const cmd = `"${exe}" --open "%1"`;
   const roots = ['HKCU\\Software\\Classes\\*\\shell\\Bigfish', 'HKCU\\Software\\Classes\\Directory\\shell\\Bigfish'];
   for (const r of roots) {
-    await runReg(['add', r, '/ve', '/t', 'REG_SZ', '/d', '用 Bigfish 打开', '/f']);
+    await runReg(['add', r, '/ve', '/t', 'REG_SZ', '/d', '唤起 Bigfish', '/f']);
     await runReg(['add', `${r}\\command`, '/ve', '/t', 'REG_SZ', '/d', cmd, '/f']);
     await runReg(['add', r, '/v', 'Icon', '/t', 'REG_SZ', '/d', `${exe},0`, '/f']);
   }
-  notify(APP_NAME, '已添加右键「用 Bigfish 打开」');
+  notify(APP_NAME, '已添加右键菜单「唤起 Bigfish」');
 }
 
 async function uninstallContextMenu() {
@@ -620,9 +627,9 @@ async function uninstallContextMenu() {
 function handleOpenArg(argv) {
   const i = argv.indexOf('--open');
   if (i === -1 || !argv[i + 1]) return;
-  const target = argv[i + 1];
   if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
-  notify(APP_NAME, `已打开: ${target}`);
+  // 目前只是唤起主窗口；真正把文件/文件夹交给 dsh 打开留待后续版本实现
+  notify(APP_NAME, '已唤起 Bigfish');
 }
 
 // ---------------------------------------------------------------------------
@@ -655,10 +662,7 @@ if (!gotLock) {
     registerShortcuts();
     startCompletionWatcher();
     if (settings.petEnabled) {
-      createPetWindow();
-      scheduleWander();
-      scheduleSleep();
-      schedulePetChatter();
+      startPet();
     }
     if (settings.launchAtLogin) setAutoStart(true);
     if (!settings.onboardingDone) createWelcomeWindow();
