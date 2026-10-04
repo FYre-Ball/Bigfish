@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>加里奥 干净帧 + 镜像帧预览</title>
+<style>
+  body{font-family:"Microsoft YaHei",sans-serif;margin:0;padding:24px;background:#1a1d26;color:#eee;}
+  h1{font-size:18px;margin:0 0 6px;}
+  .sub{color:#8a93a8;font-size:13px;margin-bottom:14px;}
+  h3{color:#7db4ff;font-size:15px;margin:20px 0 10px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
+  .card{background:#242833;border-radius:12px;padding:10px;text-align:center;}
+  .card .n{font-size:12px;color:#9aa3b5;margin-bottom:6px;}
+  .holder{border-radius:8px;min-height:200px;display:flex;align-items:center;justify-content:center;padding:6px;
+    background:conic-gradient(#3a3f4d 25%,#2a2e39 0 50%,#3a3f4d 0 75%,#2a2e39 0)0 0/22px 22px;}
+  .holder img{max-width:100%;max-height:190px;}
+</style>
+</head>
+<body>
+  <h1>加里奥 · 干净帧（去阴影去文字）+ 镜像帧</h1>
+  <div class="sub">上排=朝右(原方向)，下排=朝左(镜像)。确认角色完整、姿态正确。</div>
+
+  <h3>朝右（原始帧）</h3>
+  <div class="grid">
+    <div class="card"><div class="n">00 · IDLE</div><div class="holder"><img src="galio-preview/clean/clean-00.png"></div></div>
+    <div class="card"><div class="n">01 · 抬右脚</div><div class="holder"><img src="galio-preview/clean/clean-01.png"></div></div>
+    <div class="card"><div class="n">02 · 右脚迈出</div><div class="holder"><img src="galio-preview/clean/clean-02.png"></div></div>
+    <div class="card"><div class="n">03 · 抬左脚</div><div class="holder"><img src="galio-preview/clean/clean-03.png"></div></div>
+    <div class="card"><div class="n">04 · 左脚迈出</div><div class="holder"><img src="galio-preview/clean/clean-04.png"></div></div>
+    <div class="card"><div class="n">05 · 抬右脚</div><div class="holder"><img src="galio-preview/clean/clean-05.png"></div></div>
+    <div class="card"><div class="n">06 · 右脚迈出</div><div class="holder"><img src="galio-preview/clean/clean-06.png"></div></div>
+    <div class="card"><div class="n">07 · 抬左脚</div><div class="holder"><img src="galio-preview/clean/clean-07.png"></div></div>
+  </div>
+
+  <h3>朝左（镜像帧，用于 walk-left）</h3>
+  <div class="grid">
+    <div class="card"><div class="n">00</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-00.png"></div></div>
+    <div class="card"><div class="n">01</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-01.png"></div></div>
+    <div class="card"><div class="n">02</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-02.png"></div></div>
+    <div class="card"><div class="n">03</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-03.png"></div></div>
+    <div class="card"><div class="n">04</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-04.png"></div></div>
+    <div class="card"><div class="n">05</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-05.png"></div></div>
+    <div class="card"><div class="n">06</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-06.png"></div></div>
+    <div class="card"><div class="n">07</div><div class="holder"><img src="galio-preview/clean-mirror/mirror-07.png"></div></div>
+  </div>
+</body>
+</html>

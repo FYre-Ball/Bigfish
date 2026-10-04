@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>加里奥 T1 · 最终桌宠皮肤（待机双组切换版）</title>
+<style>
+  body{font-family:"Microsoft YaHei",sans-serif;margin:0;padding:24px;background:#1a1d26;color:#eee;}
+  h1{font-size:18px;margin:0 0 6px;}
+  .sub{color:#8a93a8;font-size:13px;margin-bottom:14px;line-height:1.6;}
+  h3{color:#7db4ff;font-size:15px;margin:20px 0 10px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
+  .card{background:#242833;border-radius:12px;padding:12px;text-align:center;}
+  .card .n{font-size:12px;color:#9aa3b5;margin-bottom:8px;}
+  .holder{border-radius:8px;min-height:180px;display:flex;align-items:center;justify-content:center;padding:6px;
+    background:conic-gradient(#4a5163 25%,#323744 0 50%,#4a5163 0 75%,#323744 0)0 0/24px 24px;}
+  .holder img{max-width:100%;max-height:160px;}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin:4px 2px;}
+  .gA{background:#3b5bdb;color:#fff;}
+  .gB{background:#9c36b5;color:#fff;}
+  .w{background:#2f9e44;color:#fff;}
+  .o{background:#e8590c;color:#fff;}
+</style>
+</head>
+<body>
+  <h1>加里奥 T1 · 最终桌宠皮肤</h1>
+  <div class="sub">
+    待机 = 两组动作交替：<b>第①组</b>(图1→图2)循环 ↔ <b>第②组</b>(图6→图7)循环，每隔 <b>5~15 秒随机</b>切一组。<br>
+    走动 = 精灵表走动帧(向右/向左镜像)；吃东西 = 图8；睡觉 = 图9。灰色胸甲/头盔已保留。
+  </div>
+
+  <h3>待机 idle（4 帧，双组切换）</h3>
+  <div class="grid">
+    <div class="card"><div class="n">idle-1 <span class="tag gA">①组</span></div><div class="holder"><img src="galio-preview/skinframes2/idle-1.png"></div></div>
+    <div class="card"><div class="n">idle-2 <span class="tag gA">①组</span></div><div class="holder"><img src="galio-preview/skinframes2/idle-2.png"></div></div>
+    <div class="card"><div class="n">idle-3 <span class="tag gB">②组</span></div><div class="holder"><img src="galio-preview/skinframes2/idle-3.png"></div></div>
+    <div class="card"><div class="n">idle-4 <span class="tag gB">②组</span></div><div class="holder"><img src="galio-preview/skinframes2/idle-4.png"></div></div>
+  </div>
+
+  <h3>走动 walk（向右 2 帧 + 向左镜像 2 帧）</h3>
+  <div class="grid">
+    <div class="card"><div class="n">walk-right-1 <span class="tag w">→</span></div><div class="holder"><img src="galio-preview/skinframes2/walk-right-1.png"></div></div>
+    <div class="card"><div class="n">walk-right-2 <span class="tag w">→</span></div><div class="holder"><img src="galio-preview/skinframes2/walk-right-2.png"></div></div>
+    <div class="card"><div class="n">walk-left-1 <span class="tag w">←</span></div><div class="holder"><img src="galio-preview/skinframes2/walk-left-1.png"></div></div>
+    <div class="card"><div class="n">walk-left-2 <span class="tag w">←</span></div><div class="holder"><img src="galio-preview/skinframes2/walk-left-2.png"></div></div>
+  </div>
+
+  <h3>吃东西 eat(图8) + 睡觉 sleep(图9)</h3>
+  <div class="grid">
+    <div class="card"><div class="n">eat-1~4 <span class="tag o">图8</span></div><div class="holder"><img src="galio-preview/skinframes2/eat-1.png"></div></div>
+    <div class="card"><div class="n">sleep <span class="tag o">图9</span></div><div class="holder"><img src="galio-preview/skinframes2/sleep.png"></div></div>
+  </div>
+</body>
+</html>

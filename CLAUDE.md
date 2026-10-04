@@ -43,6 +43,22 @@ npm run icons        # 重新生成图标(make-icons.js,需 sharp)
 - dsh web 服务有 `/api` origin trust fence;打包的 Node 运行时在 `node-runtime/`(dsh 原生模块 ABI 需要真实 Node,不能跑在 Electron 的 Node 上)
 - 模型 ID:`deepseek-v4-pro`、`deepseek-v4-flash`(官方无 ascend 后缀);base URL `https://api.deepseek.com`(OpenAI 兼容)+ `/anthropic`(Anthropic 兼容)
 
+## Python 位置备忘
+
+需要运行 Python 时,优先使用以下解释器(按推荐顺序):
+
+| 路径 | 版本 | 说明 |
+|------|------|------|
+| `D:\Python\python.exe` | 3.14.2 | 独立安装,最干净,优先使用 |
+| `D:\Anaconda\envs\torch\python.exe` | 3.10.20 | 含 PyTorch,跑 torch 相关用这个 |
+| `D:\Anaconda\envs\py310\python.exe` | 3.10.20 | 通用 3.10 |
+| `D:\Anaconda\envs\it\python.exe` | 3.10.20 | |
+| `D:\Anaconda\envs\omnizip\python.exe` | 3.14.4 | |
+| `D:\Anaconda\python.exe` | 3.13.9 | Anaconda base |
+| `D:\miniconda3\python.exe` | 3.13.13 | miniconda base |
+
+注意:`where python` 返回的是应用商店占位程序,不是真实解释器,不要使用。
+
 ## 注意事项
 
 - 开发模式(`npm start`)与安装版行为差异:托盘卸载、右键菜单仅安装版可用

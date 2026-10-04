@@ -2,62 +2,7 @@
 
 > ⚠️ **非官方声明**：Bigfish 是独立的第三方社区项目，基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（MIT 协议）构建，**非 DeepSeek 官方出品**，与 DeepSeek 无隶属、赞助或背书关系。
 
-Bigfish 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的 Electron 桌面版：把 `dsh web` 的本地后端 + React UI 包进一个原生窗口，并加上系统托盘、全局快捷键、桌面萌宠、新手向导等桌面原生能力，免去开终端、记端口、开浏览器。欢迎大家来fork，来开发更多的功能，现在只是一些很基础的功能，期待大家的反响。
-
-## 桌面功能
-
-| 功能 | 说明 |
-|---|---|
-| 🖥️ 系统托盘 | 任务栏图标，点击切换主窗口；右键菜单含各项开关 |
-| ⌨️ 全局快捷键 | `Ctrl+Shift+D` 随时唤起/隐藏主窗口 |
-| 🐟 桌面萌宠 | 透明悬浮窗，可拖动、单击唤起主窗口，含待机/吃/左走/右走/睡觉多状态动画 |
-| 🔔 完成通知 | 后端任务完成后系统弹通知 + 萌宠冒泡提醒 |
-| 🧭 新手向导 | 首次启动引导配置 API Key，一键跳转 DeepSeek 官网 |
-| 📂 右键菜单 | 「唤起 Bigfish」：右键文件/文件夹快速唤起主窗口（托盘菜单安装；直接打开文件将在后续版本实现） |
-| 🚀 开机自启 | 托盘菜单勾选 |
-| ⬇️ 关闭到托盘 | 点窗口 X 不退出，隐藏到托盘后台运行 |
-
-## 预装技能
-
-为了让普通人开箱即用，Bigfish 预装了 5 个常用技能（位于 `bundled-skills/`，通过 `DSH_BUNDLED_SKILL_DIR` 加载，source 标记为 `bundled`、优先级最高）：
-
-| 技能 | 名称 | 用途 |
-|---|---|---|
-| 🖼️ 图片识别 | `image-recognition` | 识别图片内容、OCR 提取文字、看图问答 |
-| 📊 PPT 生成 | `ppt-generation` | 按主题生成 .pptx 或 HTML 幻灯片 |
-| 📄 文档总结 | `document-summary` | 总结文档/文章/网页，提取要点 |
-| ✍️ 写作助手 | `writing-assistant` | 文章、邮件、文案、报告等写作 |
-| 🌐 翻译 | `translation` | 中英互译及润色、本地化 |
-
-**新增技能**：在 `bundled-skills/` 里放一个带 YAML frontmatter 的 `.md` 文件即可，格式：
-
-```markdown
----
-name: my-skill          # kebab-case
-description: 一句话说明这个技能做什么
-whenToUse: 用户什么时候应该用到它
----
-这里是技能的指令正文……
-```
-
-## 工作原理
-
-```
-┌───────────────────────────────────────────────┐
-│  Electron 主进程 (main.js)                     │
-│   1. 找一个空闲的 127.0.0.1 端口               │
-│   2. 用捆绑的 Node 拉起 dsh --profile web      │
-│   3. 轮询直到后端就绪                           │
-│   4. BrowserWindow 加载 http://127.0.0.1:端口  │
-│   + 托盘 / 快捷键 / 萌宠 / 向导 / 通知         │
-└───────────────────────────────────────────────┘
-```
-
-后端复用 `@deepseek-ai/dsh` 这个 npm 包，与命令行版完全一致；桌面版只是套了一层原生窗口。后端只监听 `127.0.0.1`（CLI 源码禁止 `0.0.0.0`，安全边界现成）。
-
-## 为什么捆绑 Node 运行时
-
-`@deepseek-ai/dsh` 需要 **Node ≥ 22**（用到 `node:zlib.createZstdDecompress`、`node:module.stripTypeScriptTypes`）。虽然 Electron 43 自带 Node 24.18，但 Electron 的原生模块 ABI 与官方 Node 不兼容（dsh 首次启动会用 pnpm 现场安装 node-pty / sharp 等原生依赖），因此打包版仍捆绑一个真实的 Node v24 运行时来跑 dsh，保证原生模块 ABI 与依赖安装时的版本完全匹配。
+Bigfish 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的 Electron 桌面版：把 `dsh web` 的本地后端 + React UI 包进一个原生窗口，并加上系统托盘、全局快捷键、桌面萌宠、新手向导等桌面原生能力，免去开终端、记端口、开浏览器。
 
 ## 开发运行
 
@@ -119,16 +64,6 @@ npm run dist:linux    # Linux AppImage + deb（需在 Linux 上构建）
 **替换成自己的萌宠形象**：直接把 `assets/pet/` 里的 PNG 换成你的角色帧即可（保持文件名对应状态）。若原图是白底 JPG，可用 `node remove-pet-bg.js` 抠背景。
 
 打包时 `afterPack.js` 会用 `build/rcedit-x64.exe` 把图标和版本信息嵌入 exe（绕开 electron-builder 内置 winCodeSign 在 Windows 上因 macOS dylib 符号链接权限失败的问题，见 [electron-builder#8149](https://github.com/electron-userland/electron-builder/issues/8149)）。
-
-## 直接下载安装包（免编译）
-
-不想自己编译？直接拿现成的 Windows 安装包：
-
-- 从本仓库的 **GitHub Releases** 页面下载 `Bigfish Setup x.y.z.exe`
-
-**安装使用**：双击 exe → 按向导安装 → 桌面/开始菜单出现「Bigfish」→ 双击即用（已内置 Node 运行时，无需装 Node）。
-
-> ⚠️ 安装包约 160MB，超过 GitHub 仓库单文件 100MB 上限，请用 **GitHub Releases** 分发（附件上限 2GB）。
 
 ## 常见问题（FAQ）
 
@@ -206,3 +141,52 @@ Bigfish 重视你的隐私：
 ## License
 
 MIT
+
+---
+
+## AI 协作注意事项
+
+> 给 AI 代理/协作者的提示。**开工第一件事先读本文件与 `CLAUDE.md` 的注意事项**,再动手,不要浪费 token 去全盘扫描磁盘。
+
+### Python 位置备忘
+
+需要运行 Python 时,优先使用以下解释器(按推荐顺序),直连已知路径,不要递归扫盘猜:
+
+| 路径 | 版本 | 说明 |
+|------|------|------|
+| `D:\Python\python.exe` | 3.14.2 | 独立安装,最干净,优先使用;**装好了 PyMuPDF** |
+| `D:\Anaconda\envs\torch\python.exe` | 3.10.20 | 含 PyTorch,跑 torch 相关用这个 |
+| `D:\Anaconda\envs\py310\python.exe` | 3.10.20 | 通用 3.10 |
+| `D:\Anaconda\envs\it\python.exe` | 3.10.20 | |
+| `D:\Anaconda\envs\omnizip\python.exe` | 3.14.4 | |
+| `D:\Anaconda\python.exe` | 3.13.9 | Anaconda base |
+| `D:\miniconda3\python.exe` | 3.13.13 | miniconda base |
+
+已知包情况(已实测):
+- PyMuPDF(`fitz`):仅 `D:\Python\python.exe` 有,其余已知解释器均无
+- 需要 PyMuPDF 时直接用 `D:\Python\python.exe`
+
+注意:`where python` 返回的是应用商店占位程序,不是真实解释器,不要使用。
+
+### 若工作区不在 `D:\Bigfish`
+
+- 全局已生效:本机 `~/.claude/CLAUDE.md`(即 `C:\Users\11860\CLAUDE.md`)含同一份 Python 位置备忘,Claude Code 会在任何项目会话自动加载。
+- 其他 AI 工具:优先读本项目 `CLAUDE.md` 或本文件;若都读不到,再定向检测 `D:\Python\python.exe` 等已知路径,避免全盘扫描。
+
+### 通用行事准则 / 验证纪律 / 禁止项 / Skill 兜底
+
+(详见全局 `~/.claude/CLAUDE.md`,此处列要点)
+
+- 开工先读 `CLAUDE.md` / `README` 注意事项;改文件前先读;失败先复现再改。
+- 声称完成前先跑验证命令读输出;不凭记忆给版本/结果。
+- 禁止:全盘递归扫描、覆盖未读文件、删用户内容、用 `WindowsApps\python.exe`。
+- Skill 按 `description` 命中时先加载并执行;未命中不强读。
+
+### 任务完成与结果呈现纪律
+
+- 禁止把中间代码当最终结果输出;最终回答只含结论 + 结果文件路径 + 简要说明。
+- 未达成目标不得提前结束;除非已完成并验证,或撞到硬阻塞且已说明,否则必须继续到完成。
+
+### 语言纪律
+
+- 思考/推理/deep-diving 全程用中文,最终输出也全部中文(除非用户要求其它语言或代码/专有名词无法翻译)。

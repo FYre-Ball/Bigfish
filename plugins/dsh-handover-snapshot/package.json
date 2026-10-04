@@ -1,0 +1,29 @@
+{
+  "name": "dsh-handover-snapshot",
+  "version": "0.1.0",
+  "description": "dsh 宿主插件：在会话框 '+' / '/' 命令菜单注入「生成交接快照」与「读取交接快照」，按 agent 执行方案落地。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "plugin": "host"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "handover",
+    "snapshot"
+  ]
+}

@@ -12,3 +12,9 @@ release/
 *.log
 .DS_Store
 dsh-bundle/node_modules/
+# 任务交接快照（会话运行态，不提交源码仓库）
+.handover-snapshots/
+# 视觉工具临时缓存（粘贴图片等运行时产物）
+.dsh-vision-toolkit/tmp/
+build/galio-preview/
+build/workspace-patch-backup/

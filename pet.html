@@ -1,18 +1,25 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <style>
+    :root {
+      --scale: 1;
+      --petW: 180px;
+      --petH: 200px;
+      --menuW: 156px;
+    }
     html, body {
       margin: 0; padding: 0;
       background: transparent;
       overflow: hidden;
       user-select: none;
-      cursor: grab;
     }
+    #stage { position: relative; }
+
     #pet-wrap {
-      width: 180px; height: 200px;
-      position: relative;
+      position: absolute; bottom: 0;
+      cursor: grab;
     }
     #bubble {
       position: absolute; top: 2px; left: 50%;
@@ -21,36 +28,105 @@
       padding: 6px 11px; border-radius: 12px;
       font-size: 12px; line-height: 1.4;
       width: max-content;
-      max-width: 160px;
+      max-width: 150px;
       white-space: normal;
       word-break: break-word;
       text-align: center;
       display: none;
       box-shadow: 0 2px 10px rgba(0,0,0,.28);
-      z-index: 2;
+      z-index: 3;
     }
     #bubble.show { display: block; animation: pop .18s ease-out; }
     #pet {
-      position: absolute; bottom: 4px; left: 50%;
-      transform: translateX(-50%);
-      height: 158px;
+      position: absolute; bottom: 4px;
+      height: calc(158px * var(--scale));
       pointer-events: none;
+      display: block;
     }
     #pet.animate-bob { animation: bob 3.2s ease-in-out infinite; }
     @keyframes bob {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(-7px); }
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
     }
     @keyframes pop {
-      from { opacity: 0; }
-      to   { opacity: 1; }
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: none; }
     }
+
+    /* Scrim: a soft shadow behind both floating panels */
+    #menu, #submenu {
+      background: #fff; color: #333;
+      box-shadow:
+        0 2px 6px rgba(18, 25, 58, .10),
+        0 10px 28px rgba(18, 25, 58, .22),
+        0 0 0 1px rgba(18, 25, 58, .04);
+      box-sizing: border-box;
+      padding: 4px;
+      display: none;
+      flex-direction: column;
+    }
+
+    /* Hover quick menu */
+    #menu {
+      position: absolute; bottom: 0;
+      width: var(--menuW);
+      z-index: 5;
+    }
+    #menu.show { display: flex; animation: pop .15s ease-out; }
+    #menu.side-left  { border-radius: 12px 8px 8px 12px; }
+    #menu.side-right { border-radius: 8px 12px 12px 8px; }
+    #menu button {
+      border: none; background: transparent; cursor: pointer;
+      font-size: 13px; text-align: left; padding: 8px 10px;
+      border-radius: 8px; color: #333; white-space: nowrap; width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #menu button:hover { background: #eef2ff; color: #2f3cc4; }
+    #menu .sep { height: 1px; background: #e8ecf5; margin: 3px 4px; }
+    #menu .arrow { color: #9aa5c0; font-size: 10px; }
+
+    /* size slider row (drag to scale, like the settings window) */
+    #menu .menu-scale {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 8px; border-radius: 8px;
+    }
+    #menu .menu-scale .ms-label { font-size: 13px; color: #333; white-space: nowrap; }
+    #menu .menu-scale input[type=range] {
+      flex: 1 1 auto; min-width: 0; margin: 0;
+      accent-color: #4d6bfe; cursor: pointer;
+    }
+    #menu .menu-scale .ms-val {
+      font-size: 12px; color: #4d6bfe; min-width: 30px; text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* submenu (skin picker) — floats beside the menu, may overlap the pet */
+    #submenu {
+      position: absolute; bottom: 0;
+      width: 156px;
+      z-index: 6;
+      max-height: 250px;
+      overflow-y: auto;
+      border-radius: 10px;
+    }
+    #submenu.show { display: flex; animation: pop .12s ease-out; }
+    #submenu button {
+      border: none; background: transparent; cursor: pointer;
+      font-size: 12.5px; text-align: left; padding: 7px 10px;
+      border-radius: 8px; color: #333; white-space: nowrap; width: 100%;
+    }
+    #submenu button:hover { background: #eef2ff; color: #2f3cc4; }
+    #submenu button.sel { color: #2f3cc4; font-weight: 700; }
   </style>
 </head>
 <body>
-  <div id="pet-wrap">
-    <div id="bubble"></div>
-    <img id="pet" draggable="false" alt="">
+  <div id="stage">
+    <div id="pet-wrap">
+      <div id="bubble"></div>
+      <img id="pet" draggable="false" alt="">
+    </div>
+    <div id="menu"></div>
+    <div id="submenu"></div>
   </div>
   <script src="pet.js"></script>
 </body>

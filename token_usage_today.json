@@ -1,0 +1,17 @@
+{
+  "date": "2026-08-17T15:27:00.471Z",
+  "todayStart": 1786896000000,
+  "sessionsScanned": 7,
+  "eventsLoaded": 79894,
+  "grandTotalTokens": 2351722,
+  "models": [
+    {
+      "model": "ustc/deepseek-v4-pro",
+      "inputTokens": 382930,
+      "outputTokens": 22680,
+      "cacheReadTokens": 1946112,
+      "cacheWriteTokens": 0,
+      "totalTokens": 2351722
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>桌面宠物设置</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(160deg, #eef4ff 0%, #f8fbff 100%);
+      color: #1f2a44;
+      user-select: none;
+      overflow-y: auto;
+    }
+    #app { max-width: 440px; margin: 0 auto; padding: 26px 22px 30px; }
+    h1 { font-size: 20px; text-align: center; margin-bottom: 4px; }
+    .sub { text-align: center; color: #8a97b3; font-size: 13px; margin-bottom: 20px; }
+
+    .card { background:#fff; border-radius:14px; box-shadow:0 6px 22px rgba(40,70,160,.10); padding:16px 16px; margin-bottom:14px; }
+    .card h2 { font-size:14px; font-weight:600; margin-bottom:12px; color:#2f3cc4; }
+    .row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .row:last-child { margin-bottom:0; }
+    .row label { font-size:13.5px; color:#3d4a63; }
+
+    input[type=range] { width: 170px; accent-color:#4d6bfe; }
+    .val { font-size:13px; color:#4d6bfe; min-width:34px; text-align:right; font-variant-numeric:tabular-nums; }
+
+    .toggle { position:relative; width:42px; height:24px; flex:0 0 auto; display:inline-block; cursor:pointer; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; inset:0; background:#ccd4e8; border-radius:24px; cursor:pointer; transition:.2s; }
+    .slider:before { content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+    .toggle input:checked + .slider { background:#4d6bfe; }
+    .toggle input:checked + .slider:before { transform:translateX(18px); }
+
+    .skins { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .skin { border-radius:10px; border:2px solid transparent; cursor:pointer; padding:6px; background:#f7f9ff; text-align:center; }
+    .skin.sel { border-color:#4d6bfe; background:#eef2ff; }
+    .skin img { width:100%; height:74px; object-fit:contain; border-radius:6px; pointer-events:none; }
+    .skin .nm { font-size:11px; color:#6b7a99; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .skin .del { display:inline-block; margin-top:2px; font-size:11px; color:#e0524d; cursor:pointer; }
+
+    button { border:none; cursor:pointer; font-weight:600; border-radius:10px; transition:transform .05s, opacity .2s; }
+    button:active { transform:scale(.98); }
+    .btn { width:100%; padding:11px; font-size:14px; background:#4d6bfe; color:#fff; }
+    .btn:hover { background:#3f5bf0; }
+    .btn:disabled { background:#b9c4f2; cursor:not-allowed; }
+    .btn-ghost { width:100%; padding:10px; font-size:13px; background:#fff; color:#4d6bfe; border:1.5px solid #c7d2ff; }
+    .btn-ghost:hover { background:#f0f4ff; }
+
+    input[type=text], input[type=password], textarea {
+      width:100%; border:1.5px solid #dbe2f5; border-radius:9px; padding:9px 11px; font-size:13px;
+      font-family:inherit; color:#1f2a44; background:#fff; resize:none;
+    }
+    input:focus, textarea:focus { outline:none; border-color:#4d6bfe; }
+    .field { margin-bottom:10px; }
+    .field label { display:block; font-size:12px; color:#6b7a99; margin-bottom:5px; }
+
+    .msg { font-size:12px; margin-top:8px; min-height:16px; }
+    .msg.ok { color:#1fa457; }
+    .msg.err { color:#e0524d; }
+
+    .hint { font-size:12px; color:#8a97b3; line-height:1.6; margin-top:8px; }
+    .close-btn { display:block; margin:20px auto 0; font-size:13px; color:#6b7a99; background:transparent; text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>🐟 桌面宠物设置</h1>
+    <div class="sub">调整大小、换形象、控制移动</div>
+
+    <div class="card">
+      <h2>外观</h2>
+      <div class="row">
+        <label>大小</label>
+        <input type="range" id="scale" min="0.6" max="1.6" step="0.05">
+        <span class="val" id="scaleVal">1.00</span>
+      </div>
+      <div class="row">
+        <label>自动走动</label>
+        <label class="toggle">
+          <input type="checkbox" id="move">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>形象</h2>
+      <div class="skins" id="skins"></div>
+      <div class="msg" id="skinMsg"></div>
+      <button class="btn-ghost" id="uploadBtn" style="margin-top:12px;">📁 上传本地图片做形象</button>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    </div>
+
+    <div class="card">
+      <h2>生成新形象</h2>
+      <div class="field">
+        <label>描述（文生图，当前用硅基流动）</label>
+        <textarea id="prompt" rows="2" placeholder="例如：一只圆滚滚的橘猫，卡通风格，透明背景"></textarea>
+      </div>
+      <div class="field">
+        <label>API Key（留空则禁用生成）</label>
+        <input type="password" id="apiKey" placeholder="sk-...">
+      </div>
+      <div class="field">
+        <label>模型</label>
+        <input type="text" id="model" value="FLUX.1-schnell">
+      </div>
+      <button class="btn" id="genBtn">✨ 生成形象</button>
+      <div class="msg" id="genMsg"></div>
+      <div class="hint">未配置 API Key 时仅支持「上传本地图片」。Key 会保存在本机，不会上传到别处。</div>
+    </div>
+
+    <button class="close-btn" id="closeBtn">关闭</button>
+  </div>
+  <script src="pet-settings.js"></script>
+</body>
+</html>
